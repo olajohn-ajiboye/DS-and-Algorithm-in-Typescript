@@ -1,109 +1,163 @@
-class LinkedListNode<R> {
-  prev: LinkedListNode<R>;
-  next: LinkedListNode<R>;
-  constructor(public value: R) {}
-}
-
-/**
- * List
- * @template
- * Holds the internal state of the linked list
- * @member head : LinkedListNode<T> head of list
- * @member tail: LinkedListNode<T>
- * @member size: number
- */
-class List<T> {
-  head: LinkedListNode<T>;
-  tail: LinkedListNode<T>;
-  size: number;
-}
-
-class LinkedList<T> {
-  // we set it to undefined because it doesn't exist yet
-  private list: List<T> = undefined;
-
-  size(): number {
-    return this.list?.size ?? 0;
+class LinkedListNode<T> {
+  data: T;
+  next: LinkedListNode<T> | null;
+  prev: LinkedListNode<T> | null;
+  constructor(data: T) {
+    this.data = data;
+    this.next = null;
+    this.prev = null;
   }
+}
+
+// internal list to store value
+class List<T> {
+  head: LinkedListNode<T> | null = null;
+  tail: LinkedListNode<T> | null = null;
+  size: number = 0;
+}
+
+export class LinkedList<T> {
+  constructor(private list: List<T> = undefined) {}
+
   isEmpty(): boolean {
-    return !this.list;
+    return !this.list?.size;
+  }
+
+  clear(): void {
+    if (this.isEmpty()) {
+      throw new Error("List is Empty, can't do");
+    } else {
+      this.list = undefined;
+    }
   }
 
   addFront(data: T): void {
     const newNode = new LinkedListNode(data);
-    if (!this.list) {
+
+    if (this.list?.head) {
+      const currentHead = this.list.head;
+      currentHead.prev = newNode;
+      newNode.next = currentHead;
       this.list.head = newNode;
-      this.list.tail = newNode;
-      this.list.size = 1;
-    } else {
-      // we make the previous node of current head to be the newNode
-      this.list.head.prev = newNode;
-
-      // now that the newly created now is the head, we shift the position of the old hed to next of the new Node
-      newNode.next = this.list.head;
-
-      // we make the new node the head
-      this.list.head = newNode;
-
-      // we increase the size
       this.list.size++;
-    }
-  }
-
-  addBack(data: T): void {
-    const newNode = new LinkedListNode(data);
-    if (!this.list) {
+    } else {
       this.list = {
-        head: newNode,
         tail: newNode,
+        head: newNode,
         size: 1,
       };
-    } else {
-      // update tail to be new node
-      this.list.tail.next = newNode;
-      // update the previous of tail(which is now the newNode) to now be current tail
-      newNode.prev = this.list.tail;
-
+    }
+  }
+  addBack(data: T): void {
+    const newNode = new LinkedListNode(data);
+    if (this.list?.tail) {
+      const currentTail = this.list.tail;
+      currentTail.next = newNode;
+      newNode.prev = currentTail;
       this.list.tail = newNode;
       this.list.size++;
+    } else {
+      this.list = {
+        tail: newNode,
+        head: newNode,
+        size: 1,
+      };
     }
   }
 
   removeFront(): T | null {
-    if (!this.list) return null;
-    const data = this.list.head.value;
-    // if current had has a next pointer
+    if (this.isEmpty()) return null;
     if (this.list.head.next) {
-      // make the new head's previous to be null
-      this.list.head.next.prev = null;
-
-      // move the pointer in head forward. The next to previous head is the new head
-      this.list.head = this.list.head.prev;
-      // decrease size
+      const currentHead = this.list.head;
+      const newHead = currentHead.next;
+      currentHead.prev = null;
+      this.list.head = newHead;
       this.list.size--;
     } else {
-      //BECAUSE we removed the only element
       this.list = undefined;
     }
-    return data;
   }
-  removeBack(): T | null {
-    if (!this.list) return null;
-    const data = this.list.tail.value;
-    // check if tail has a prev pointer
-    if (!this.list.tail.prev) {
-      // we have remove the only existing element in the list
-      this.list = undefined;
-    } else {
-      // move the pointer in the tail
-      this.list.tail.prev = this.list.tail.prev.prev;
-      this.list.tail.next = null;
 
-      // make the updated tail === previous tail
-      this.list.tail = this.list.tail.prev;
+  removeBack(): T | null {
+    if (this.isEmpty()) return null;
+    if (this.list.tail.prev) {
+      let currentTail = this.list.tail;
+      const newTail = currentTail.prev;
+      newTail.next = null;
+      this.list.tail = newTail;
       this.list.size--;
+    } else {
+      this.list = undefined;
+    }
+  }
+
+  indexOf(val: T): number {
+    if (this.isEmpty()) return -1;
+    let curr = this.list.head;
+    let i = 0;
+    while (curr.data !== val) {
+      // we reached the end without finding the element
+      if (!curr.next) return -1;
+      curr = curr.next;
+      i++;
+    }
+    return i;
+  }
+
+  toArray(): LinkedListNode<T>[] {
+    if (this.isEmpty()) return [];
+    const arrayList: LinkedListNode<T>[] = [];
+    let curr = this.list.head;
+    let i = 0;
+    while (curr.next) {
+      arrayList.push(curr);
+      curr = curr.next;
+      i++;
+    }
+    return [...arrayList, this.list.tail];
+  }
+
+  //   reverse(): void {
+  //     if (this.isEmpty()) return null;
+  //     if (!this.list.head.next || !this.list.tail.prev) return;
+  //     let current = this.list.head;
+  //     let temp = current.prev;
+
+  //       while (current) {
+  //           console.lo
+  //       current.prev = current.next;
+  //       current = current.prev;
+  //     }
+  //   }
+
+  addAt(index: number, data: T): void {
+    if (this.isEmpty()) throw new Error('Create LinkedList first');
+    if (index === 0) {
+      this.addFront(data);
+    }
+    if (index === this.list.size) {
+      this.addBack(data);
+    }
+    if (index > this.list.size || index < 0) throw new Error('Error adding');
+
+    let j = 0;
+    let curr = this.list.head;
+    while (j < index) {
+      curr = curr.next;
     }
 
-    return data;
+    const newNode = new LinkedListNode<T>(data);
+    curr.prev = newNode;
+    newNode.next = curr;
+    newNode.prev = curr.prev.prev;
+    curr.next = curr.next.next;
   }
 }
+
+const list = new LinkedList<number>();
+
+list.addFront(3);
+list.addBack(900);
+list.addFront(31);
+list.addBack(9001);
+console.log(list);
