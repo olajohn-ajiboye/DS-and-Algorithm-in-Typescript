@@ -84,3 +84,14 @@ class LinkedList {
     return list;
   }
 }
+
+const ll = new LinkedList();
+ll.isEmpty(); // false
+ll.addFront(40);
+ll.addFront(50);
+console.log(ll.size); // 2
+ll.addBack(10);
+ll.addAt(90, 2); // throw error
+
+ll.removeAt(1);
+//ll.print() // [50,40]
